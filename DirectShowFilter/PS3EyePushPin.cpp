@@ -7,11 +7,19 @@ PS3EyePushPin::PS3EyePushPin(HRESULT *phr, CSource *pFilter, ps3eye::PS3EYECam::
 	CSourceStream(NAME("PS3 Eye Source"), phr, pFilter, L"Out"),
 	_device(device)
 {
-	OutputDebugString(L"HELLO WORLD FROM PUSH PIN CONSTRUCTOR\n");
+	LPVOID refClock;
+	HRESULT r = CoCreateInstance(CLSID_SystemClock, NULL, CLSCTX_INPROC_SERVER, IID_IReferenceClock, &refClock);
+	if ((SUCCEEDED(r))) {
+		_refClock = (IReferenceClock *)refClock;
+	}
+	else {
+		OutputDebugString(L"PS3EyePushPin: failed to create reference clock\n");
+		_refClock = NULL;
+	}
 }
 
 PS3EyePushPin::~PS3EyePushPin() {
-	
+	if(_refClock != NULL) _refClock->Release();
 }
 
 HRESULT PS3EyePushPin::CheckMediaType(const CMediaType *pMediaType)
@@ -19,15 +27,15 @@ HRESULT PS3EyePushPin::CheckMediaType(const CMediaType *pMediaType)
 	CheckPointer(pMediaType, E_POINTER);
 
 	if (pMediaType->IsValid() && *pMediaType->Type() == MEDIATYPE_Video &&
-		pMediaType->Subtype() != NULL && *pMediaType->Subtype() == MEDIASUBTYPE_RGB24) {
+		pMediaType->Subtype() != NULL && *pMediaType->Subtype() == MEDIASUBTYPE_RGB32) {
 		if (*pMediaType->FormatType() == FORMAT_VideoInfo &&
 			pMediaType->Format() != NULL && pMediaType->FormatLength() > 0) {
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)pMediaType->Format();
 			if ((pvi->bmiHeader.biWidth == 640 && pvi->bmiHeader.biHeight == 480) ||
 				(pvi->bmiHeader.biWidth == 320 && pvi->bmiHeader.biHeight == 240)) {
-				if (pvi->bmiHeader.biBitCount == 24 && pvi->bmiHeader.biCompression == BI_RGB
+				if (pvi->bmiHeader.biBitCount == 32 && pvi->bmiHeader.biCompression == BI_RGB
 					&& pvi->bmiHeader.biPlanes == 1) {
-					int minTime = 10000000 / 60;
+					int minTime = 10000000 / 70;
 					int maxTime = 10000000 / 2;
 					if (pvi->AvgTimePerFrame >= minTime && pvi->AvgTimePerFrame <= maxTime) {
 						return S_OK;
@@ -43,7 +51,6 @@ HRESULT PS3EyePushPin::CheckMediaType(const CMediaType *pMediaType)
 HRESULT PS3EyePushPin::GetMediaType(int iPosition, CMediaType *pMediaType) {
 	if (_currentMediaType.IsValid()) {
 		// SetFormat from IAMStreamConfig has been called, only allow that format
-		OutputDebugString(L"USING _currentMediaType\n");
 		CheckPointer(pMediaType, E_POINTER);
 		if (iPosition != 0) return E_UNEXPECTED;
 		*pMediaType = _currentMediaType;
@@ -66,24 +73,23 @@ HRESULT PS3EyePushPin::_GetMediaType(int iPosition, CMediaType *pMediaType) {
 
 	int fps = 10;
 	if (iPosition / 3 == 0) {
-		// 640x480
+		// 640x480, {30, 60, 15} fps
 		pvi->bmiHeader.biWidth = 640;
 		pvi->bmiHeader.biHeight = 480;
-		fps = iPosition == 2 ? 15 : 30 * (2 - iPosition);
+		fps = iPosition == 2 ? 15 : 30 * (iPosition+1);
 	}
 	else  {
-		// 320x240
+		// 320x240, {30, 60, 15} fps
 		pvi->bmiHeader.biWidth = 320;
 		pvi->bmiHeader.biHeight = 240;
 
-		fps = iPosition == 5 ? 15 : 30 * (5 - iPosition);
+		fps = iPosition == 5 ? 15 : 30 * (iPosition-2);
 	}
 
 	pvi->AvgTimePerFrame = 10000000 / fps;
 
-	pvi->bmiHeader.biBitCount = 24;
+	pvi->bmiHeader.biBitCount = 32;
 	pvi->bmiHeader.biCompression = BI_RGB;
-	// Adjust the parameters common to all formats
 	pvi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	pvi->bmiHeader.biPlanes = 1;
 	pvi->bmiHeader.biSizeImage = GetBitmapSize(&pvi->bmiHeader);
@@ -139,12 +145,12 @@ HRESULT PS3EyePushPin::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERT
 
 HRESULT PS3EyePushPin::OnThreadCreate()
 {
-	//CAutoLock cAutoLock(m_pFilter->pStateLock());
+	if(_refClock != NULL) _refClock->GetTime(&_startTime);
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)m_mt.Format();
 	int fps = 10000000 / ((int)pvi->AvgTimePerFrame);
 	OutputDebugString(L"initing device\n");
 	if (_device.use_count() > 0) {
-		bool didInit = _device->init(pvi->bmiHeader.biWidth, pvi->bmiHeader.biHeight, fps, ps3eye::PS3EYECam::EOutputFormat::BGR);
+		bool didInit = _device->init(pvi->bmiHeader.biWidth, pvi->bmiHeader.biHeight, fps, ps3eye::PS3EYECam::EOutputFormat::BGRA);
 		if (didInit) {
 			OutputDebugString(L"starting device\n");
 			_device->setFlip(false, true);
@@ -160,7 +166,7 @@ HRESULT PS3EyePushPin::OnThreadCreate()
 		}
 	}
 	else {
-		// no device found but we'll render an error so press on
+		// no device found but we'll render a blank frame so press on
 		return S_OK;
 	}
 }
@@ -173,7 +179,7 @@ HRESULT PS3EyePushPin::OnThreadDestroy()
 	return S_OK;
 }
 
-HRESULT PS3EyePushPin::FillBuffer(IMediaSample *pSample) 
+HRESULT PS3EyePushPin::FillBuffer(IMediaSample *pSample)
 {
 	BYTE *pData;
 	long cbData;
@@ -190,24 +196,23 @@ HRESULT PS3EyePushPin::FillBuffer(IMediaSample *pSample)
 		_device->getFrame(pData);
 	}
 	else {
-		FillError(pData);
+		// TODO: fill with error message image
+		for (int i = 0; i < cbData; ++i) pData[i] = 0;
+	}
+
+	if (_refClock != NULL) {
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)m_mt.Format();
+		REFERENCE_TIME t;
+		_refClock->GetTime(&t);
+		REFERENCE_TIME rtStart = t - _startTime - pvi->AvgTimePerFrame; // compensate for frame buffer in PS3EYECam
+		REFERENCE_TIME rtStop = rtStart + pvi->AvgTimePerFrame;
+
+		pSample->SetTime(&rtStart, &rtStop);
+		// Set TRUE on every sample for uncompressed frames
+		pSample->SetSyncPoint(TRUE);
 	}
 
 	return S_OK;
-}
-
-void PS3EyePushPin::FillError(BYTE *pData) {
-	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)m_mt.Format();
-	int imWidth = (int)pvi->bmiHeader.biWidth;
-	int imHeight = (int)pvi->bmiHeader.biHeight;
-	int nchan = 3;
-	for (int i = 0; i < imHeight; ++i) {
-		for (int j = 0; j < imWidth; ++j) {
-			for (int k = 0; k < 3; ++k) {
-				*(pData++) = 0;
-			}
-		}
-	}
 }
 
 HRESULT __stdcall PS3EyePushPin::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData)

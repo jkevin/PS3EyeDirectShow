@@ -11,6 +11,8 @@ protected:
 	ps3eye::PS3EYECam::PS3EYERef _device;
 	CMediaType _currentMediaType;
 	HRESULT _GetMediaType(int iPosition, CMediaType *pMediaType);
+	REFERENCE_TIME _startTime;
+	IReferenceClock *_refClock;
 
 public:
 	PS3EyePushPin(HRESULT *phr, CSource *pFilter, ps3eye::PS3EYECam::PS3EYERef device);

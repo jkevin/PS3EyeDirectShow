@@ -27,7 +27,7 @@
 const AMOVIESETUP_MEDIATYPE sudOpPinTypes =
 {
 	&MEDIATYPE_Video,       // Major type
-	&MEDIASUBTYPE_RGB24      // Minor type
+	&MEDIASUBTYPE_RGB32      // Minor type
 };
 
 const AMOVIESETUP_PIN sudOutputPinPS3Eye =
@@ -121,7 +121,7 @@ STDAPI DllRegisterServer()
 	hr = pFM2->RegisterFilter(
 		CLSID_PS3EyeSource,                // Filter CLSID. 
 		g_ps3PS3EyeSource,                       // Filter name.
-		NULL,                            // Device moniker. 
+		NULL,								// Device moniker. 
 		&CLSID_VideoInputDeviceCategory,  // Input device category.
 		g_ps3PS3EyeSource,                       // Instance data.
 		&sudPushSourcePS3Eye                    // Pointer to filter information.
