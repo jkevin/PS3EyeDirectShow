@@ -9,7 +9,7 @@ PS3EyeSource::PS3EyeSource(IUnknown *pUnk, HRESULT *phr)
 	: CSource(NAME("PS3EyeSource"), pUnk, CLSID_PS3EyeSource),
 	_pin(NULL)
 {
-	const std::vector<ps3eye::PS3EYECam::PS3EYERef> &devices = ps3eye::PS3EYECam::getDevices();
+	const std::vector<ps3eye::PS3EYECam::PS3EYERef> &devices = ps3eye::PS3EYECam::getDevices(true);
 	ps3eye::PS3EYECam::PS3EYERef dev;
 	if (devices.size() > 0) {
 		dev = devices[0];

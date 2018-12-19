@@ -145,7 +145,8 @@ HRESULT PS3EyePushPin::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERT
 
 HRESULT PS3EyePushPin::OnThreadCreate()
 {
-	if(_refClock != NULL) _refClock->GetTime(&_startTime);
+	if (_refClock != NULL) _refClock->GetTime(&_startTime);
+	
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)m_mt.Format();
 	int fps = 10000000 / ((int)pvi->AvgTimePerFrame);
 	OutputDebugString(L"initing device\n");
