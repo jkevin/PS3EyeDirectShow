@@ -23,19 +23,23 @@
       <ComponentGroupRef Id="Filter64Components" />
     </Feature>
     
-    <Feature Id="Filter32Feature" Title="32 bit DirectShow filter" Level="1">
+    <!-- only install 32 bit filter and WinUSB driver if CLEye driver is not installed  -->
+    <!-- 64 bit filter can use CLEye's WinUSB driver but CLEye can't use this WinUSB driver -->
+    <!-- always uninstall in case CLEye gets installed after this package -->
+    <!-- warning: major upgrade will always install these components -->
+    <Feature Id="Filter32Feature" Title="32 bit DirectShow filter" Level="0">
       <ComponentGroupRef Id="Filter32Components" />
-      <Condition Level="0">
-        <![CDATA[CLEYEDRIVER]]>
+      <Condition Level="1">
+        <![CDATA[(NOT CLEYEDRIVER) OR REMOVE="ALL"]]>
       </Condition>
     </Feature>
 
-    <Feature Id="WinUSBDriverFeature" Title="WinUSB Driver" Level="1">
+    <Feature Id="WinUSBDriverFeature" Title="WinUSB Driver" Level="0">
       <ComponentGroupRef Id="CertificateComponents" />
       <ComponentGroupRef Id="WinUSBInstallerComponents" />
       <ComponentGroupRef Id="WinUSBDriverComponents" />
-      <Condition Level="0">
-        <![CDATA[CLEYEDRIVER]]>
+      <Condition Level="1">
+        <![CDATA[(NOT CLEYEDRIVER) OR REMOVE="ALL"]]>
       </Condition>
     </Feature>
     
