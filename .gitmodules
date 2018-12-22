@@ -1,0 +1,3 @@
+[submodule "PS3EYEDriver"]
+	path = PS3EYEDriver
+	url = https://github.com/jkevin/PS3EYEDriver.git
