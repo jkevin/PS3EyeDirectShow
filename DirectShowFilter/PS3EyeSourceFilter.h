@@ -1,7 +1,7 @@
 #pragma once
 
 // Filter name strings
-#define g_ps3PS3EyeSource    L"PS3Eye Source Filter"
+#define g_ps3PS3EyeSource    L"PS3 Eye Universal"
 
 class PS3EyePushPin;
 
@@ -36,6 +36,7 @@ public:
 	HRESULT GetMediaType(int iPosition, CMediaType *pMediaType);
 	HRESULT DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pRequest);
 	
+	HRESULT OnThreadStartPlay();
 	HRESULT OnThreadCreate();
 	HRESULT OnThreadDestroy();
 	HRESULT FillBuffer(IMediaSample *pSample);

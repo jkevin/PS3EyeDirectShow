@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:iis="http://schemas.microsoft.com/wix/IIsExtension"
+     xmlns:drv="http://schemas.microsoft.com/wix/DifxAppExtension">
+  <Product Id="*" Name="PS3 Eye Universal Driver" Language="1033" Version="1.0.0.0" Manufacturer="John Kevin Corcoran" UpgradeCode="560d5f3a-2039-4906-9dff-7cf25fe2b295">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <UIRef Id="WixUI_Minimal" />
+    
+    <Property Id="CLEYEDRIVER">
+      <RegistrySearch Id="CLEyeDriver"
+                      Root="HKCR"
+                      Key="CLSID\{083863F1-70DE-11D0-BD40-00A0C911CE86}\Instance\{A8E36632-8B66-410A-B7C9-8AAF2B27392D}"
+                      Name="CLSID"
+                      Win64="no"
+                      Type="raw" />
+    </Property>
+
+    <Feature Id="Filter64Feature" Title="64 bit DirectShow filter" Level="1">
+      <ComponentGroupRef Id="Filter64Components" />
+    </Feature>
+    
+    <Feature Id="Filter32Feature" Title="32 bit DirectShow filter" Level="1">
+      <ComponentGroupRef Id="Filter32Components" />
+      <Condition Level="0">
+        <![CDATA[CLEYEDRIVER]]>
+      </Condition>
+    </Feature>
+
+    <Feature Id="WinUSBDriverFeature" Title="WinUSB Driver" Level="1">
+      <ComponentGroupRef Id="CertificateComponents" />
+      <ComponentGroupRef Id="WinUSBInstallerComponents" />
+      <ComponentGroupRef Id="WinUSBDriverComponents" />
+      <Condition Level="0">
+        <![CDATA[CLEYEDRIVER]]>
+      </Condition>
+    </Feature>
+    
+  </Product>
+  
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="PS3 Eye Universal Driver" />
+      </Directory>
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER2" Name="PS3 Eye Universal Driver">
+          <Directory Id="DRIVERINSTALLFOLDER" Name="amd64" />
+        </Directory>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="Filter64Components" Directory="INSTALLFOLDER2">
+      <ComponentRef Id="Filter64Component" />
+    </ComponentGroup>
+    <ComponentGroup Id="Filter32Components" Directory="INSTALLFOLDER">
+      <ComponentRef Id="Filter32Component" />
+    </ComponentGroup>
+    <ComponentGroup Id="WinUSBDriverComponents" Directory="INSTALLFOLDER2">
+      <ComponentRef Id="WinUSBDriverComponent" />
+      <ComponentRef Id="InstallerEXE" />
+    </ComponentGroup>
+    
+    <DirectoryRef Id="INSTALLFOLDER2">
+      <Component Id="Filter64Component" Win64="yes">
+        <File Id="fil75BB6DD4843E6077E97B38A26526B6F7" KeyPath="yes" Source="$(var.SolutionDir)/x64/Release/PS3EyeSourceFilter.dll" Name="PS3EyeSourceFilter64.dll">
+          <Class Id="{B9ACDAE7-CEE5-4394-B10D-38EDB00CDB54}" Context="InprocServer32" Description="PS3 Eye Universal" ThreadingModel="both" />
+        </File>
+        <RegistryValue Root="HKCR" Key="CLSID\{860BB310-5D01-11D0-BD3B-00A0C911CE86}\Instance\PS3 Eye Universal" Name="FriendlyName" Value="PS3 Eye Universal" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{860BB310-5D01-11D0-BD3B-00A0C911CE86}\Instance\PS3 Eye Universal" Name="CLSID" Value="{B9ACDAE7-CEE5-4394-B10D-38EDB00CDB54}" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{860BB310-5D01-11D0-BD3B-00A0C911CE86}\Instance\PS3 Eye Universal" Name="FilterData" Value="020000000000600001000000000000003070693308000000010000000100000000000000380000003074793300000000480000005800000081426CFB5303D111905F0000C0CC16BA7669647300001000800000AA00389B717EEB36E44F52CE119F530020AF0BA770" Type="binary" Action="write" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Cryptography\DRM_RNG" Value="" Type="string" Action="write" />
+      </Component>
+      <Component Id="WinUSBDriverComponent" Guid="{AE1E33A1-F2ED-4A3E-82D9-0A870721B5D2}" Win64="yes">
+        <drv:Driver AddRemovePrograms="no" />
+        <File Id="usb_device.inf" Source="$(var.ProjectDir)/usb_driver/usb_device.inf" />
+        <File Id="usb_device.cat" Source="$(var.ProjectDir)/usb_driver/usb_device.cat" />
+      </Component>
+      <Component Id="InstallerEXE" Win64="yes">
+        <File Id="installer_x64.exe" Source="$(var.ProjectDir)/usb_driver/installer_x64.exe" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="Filter32Component">
+        <File Id="fil75BB6DD4843E6077E97B38A26526B6F8" KeyPath="yes" Source="$(var.SolutionDir)/Release/PS3EyeSourceFilter.dll">
+          <Class Id="{B9ACDAE7-CEE5-4394-B10D-38EDB00CDB54}" Context="InprocServer32" Description="PS3 Eye Universal" ThreadingModel="both" />
+        </File>
+        <RegistryValue Root="HKCR" Key="CLSID\{860BB310-5D01-11D0-BD3B-00A0C911CE86}\Instance\PS3 Eye Universal" Name="FriendlyName" Value="PS3 Eye Universal" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{860BB310-5D01-11D0-BD3B-00A0C911CE86}\Instance\PS3 Eye Universal" Name="CLSID" Value="{B9ACDAE7-CEE5-4394-B10D-38EDB00CDB54}" Type="string" Action="write" />
+        <RegistryValue Root="HKCR" Key="CLSID\{860BB310-5D01-11D0-BD3B-00A0C911CE86}\Instance\PS3 Eye Universal" Name="FilterData" Value="020000000000600001000000000000003070693308000000010000000100000000000000380000003074793300000000480000005800000081426CFB5303D111905F0000C0CC16BA7669647300001000800000AA00389B717EEB36E44F52CE119F530020AF0BA770" Type="binary" Action="write" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Cryptography\DRM_RNG" Value="" Type="string" Action="write" />
+      </Component>
+    </DirectoryRef>
+    <ComponentGroup Id="WinUSBInstallerComponents" Directory="DRIVERINSTALLFOLDER">
+      <Component Id="WdfCoInstaller" Win64="yes">
+        <File Id="WdfCoInstaller01011.dll" Source="$(var.ProjectDir)/usb_driver/amd64/WdfCoInstaller01011.dll" />
+      </Component>
+      <Component Id="winusbcoinstaller" Win64="yes">
+        <File Id="winusbcoinstaller2.dll" Source="$(var.ProjectDir)/usb_driver/amd64/winusbcoinstaller2.dll" />
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="CertificateComponents" Directory="INSTALLFOLDER2">
+      <Component Id="WinUSBCertificate" Win64="yes">
+        <File Id="usb_device.cer" Source="$(var.ProjectDir)/usb_driver/usb_device.cer" />
+        <iis:Certificate Id="RootCertificate" Name="usb_device.cer" 
+                         Request="no" StoreLocation="localMachine" 
+                         StoreName="root" BinaryKey="CertificateBinary" />
+        <iis:Certificate Id="PublisherCertificate" Name="usb_device.cer"
+                         Request="no" StoreLocation="localMachine"
+                         StoreName="trustedPublisher" BinaryKey="CertificateBinary" />
+      </Component>
+    </ComponentGroup>
+    <Binary Id="CertificateBinary" SourceFile="$(var.ProjectDir)/usb_driver/usb_device.cer" />
+  </Fragment>
+</Wix>

@@ -15,21 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="..\PS3EYEDriver\src\ps3eye_capi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\PS3EYEDriver\src\ps3eye.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\PS3EYEDriver\src\ps3eye_capi.h">
+    <ClInclude Include="..\PS3EYEDriver\src\ps3eye.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\PS3EYEDriver\src\ps3eye.cpp">
+    <ClCompile Include="..\PS3EYEDriver\src\ps3eye_capi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\PS3EYEDriver\src\ps3eye_capi.cpp">
+    <ClCompile Include="..\PS3EYEDriver\src\ps3eye.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
