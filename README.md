@@ -31,7 +31,13 @@ Requirements:
 - Windows 10 SDK
 - WIX
 
-First checkout the repo and init the submodules:
+First clone the repo and init the submodules:
+```
+$ git clone https://github.com/jkevin/PS3EyeDirectShow.git
+$ cd PS3EyeDirectShow
+$ git submodule init
+$ git submodule update
+```
 
 Open `libusb/msvc/libusb_2017.sln` in Visual Studio 2017. If you don't have the Windows 8.1 SDK, change the SDK target to Windows 10 in all of the libusb project properties. Build the solution with all desired configurations. Next open PS3EyeDriverMSVC.sln and build the desired configs again.
 
