@@ -155,6 +155,8 @@ STDAPI DllUnregisterServer()
 //
 // DllEntryPoint
 //
+
+/*
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 
 BOOL APIENTRY DllMain(HANDLE hModule,
@@ -164,3 +166,4 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
 
+*/
